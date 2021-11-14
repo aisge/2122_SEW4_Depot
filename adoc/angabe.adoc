@@ -1,0 +1,88 @@
+= Übung Wertpapierdepot
+
+Erstellen Sie in einem Quarkus-Projekt eine sehr vereinfachte Wertpapierverwaltung. Dabei soll folgendes Datenbank-Schema zum Einsatz kommen:
+
+[plantuml]
+....
+@startuml
+
+entity Kunde {
+  kundennr: number(8) PK auto
+  vorname: varchar2(30)
+  nachname: varchar2(30) *
+}
+
+entity Depot {
+  depotnr: number(8) PK auto
+  bezeichnung: varchar2(30) *
+  kundennr: number(8) FK
+}
+
+entity Wertpapier {
+  wkn: varchar2(6) PK
+  Bezeichnung: varchar2(30)
+  kurs: number(8,2) *
+}
+
+entity Position {
+  ---
+  id: number PK auto
+  depotnr: number(8) FK
+  wkn: varchar2(6) FK
+  anzahl: number(8,2)
+  kaufkurs: number(8,2)
+  kaufdatum: date
+}
+
+Kunde ||-down-|{ Depot
+Depot ||-down-o{ Position
+Wertpapier ||-down-o{ Position
+
+@enduml
+....
+
+
+== Aufgaben
+
+Checken Sie das Basistemplate zu dem Projekt aus  und erweiteren Sie das Projekt um folgende Schritte:
+
+=== Entitäten erstellen
+
+Im Package at.htl.depot.model sind bereits die POJO-Klassen für das Datenmodell erstellt. Erweitern Sie diese Klassen dahingehend, dass gültige Entitäten daraus werden.
+
+.Beachten Sie folgendes:
+* Primärschlüssel: wenn im ERD _auto_ steht, soll die ID automatisch vergeben werden
+* Stellen Sie sicher, dass die Beziehungen korrekt abgebildet werden (Fremdschlüssel werden dann automatisch generiert)
+* Die Datentypen und Größen müssen der Angabe entsprechen!
+* Spalten, die mit (*) markiert wurden, sind Pflichtfelder und dürfen nicht leer gelassen werden.
+
+.Beziehungen:
+* Erstellen Sie die Beziehungen sofern nicht anders angegeben *unidirektional*
+* Zwischen `Depot` und `Position` soll die Beziehung *bidirektional* implementiert werden. D.h. wird ein Depot geladen sollen sofort sämtliche Positionen im Zugriff sein.
+
+
+== Repository-Klassen
+
+Erstellen Sie folgende Repository-Klassen:
+
+
+=== `DepotRepository`
+
+.Stellen Sie folgende Methoden bereit:
+* `kaufe(depotnr, wkn, anzahl)` +
+  Prüft, ob Position schon existiert. Wenn ja, wird Anzahl erhöht. +
+  Der Kaufkurs soll dann dem durchschnittlichen Kaufkurs entsprechen.
+  Existiert die Position noch nicht im Depot wird diese neu erstellt.
+
+* `verkaufe(depotnr, wkn, anzahl)` +
+  Die Anzahl soll entsprechend verringert werden
+
+
+
+== REST-Schnittstelle
+
+Stellen Sie einen Rest-Service bereit, mit dem die Käufe und Verkäufe durchgeführt werden können!
+
+* POST `/api/depot/kauf/<depotNr>/<wkn>/<Anzahl>`
+* POST `/api/depot/verkauf/<depotNr>/<wkn>/<Anzahl>`
+
